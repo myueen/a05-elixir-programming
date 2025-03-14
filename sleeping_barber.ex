@@ -6,6 +6,20 @@ def new do
     {:ok, pid}
 end
 
+# receptionist
+def receptionist(pid, item) do
+    IO.puts("Greeting #{inspect(pid)}")
+    if Enum.count(queue) < 6 do enqueue(pid, item) end
+end
+
+
+# barber
+# def barber(pid) do
+#     if queue != [] do dequeue(pid) end
+#     # print random time
+
+# end
+
 def enqueue(pid, item) do send( pid, {:enqueue, item}) end
 def dequeue(pid) do send (pid,{:dequeue}) end
 def size(pid) do
