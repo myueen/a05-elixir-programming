@@ -29,6 +29,7 @@ defmodule SleepingBarber do
 
                 receive do
                     :added -> send(barber, :customer_waiting)
+
                 end
 
                 receptionist(waiting_room)
@@ -59,7 +60,7 @@ defmodule SleepingBarber do
 
 
     def customer(receptionist) do
-        send(receptionist, {:new_customer, self()})
+        send(receptionist, {:receptionist, self()})
 
         receive do
             :wait -> IO.puts("Customer #{inspect(self())} is waiting.")
@@ -92,7 +93,7 @@ defmodule SleepingBarber do
                     waiting_room(queue)
                 else
                     send(sender, :added)
-                    waiting_room([queue|pid_c])
+                    waiting_room(queue ++ [pid_c])
                 end
             {:dequeue, sender} ->
                 case queue do
