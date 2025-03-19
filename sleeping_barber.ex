@@ -14,8 +14,9 @@ defmodule SleepingBarber do
         pid_c =  spawn_link(__MODULE__, :customer, [pid_r])
         send(pid_r, {:receptionist, pid_b, pid_c})
 
+        IO.puts("testing for hot-swapping")
         random_number = :rand.uniform(9)    # random number between 1 and 9
-        :timer.sleep(1000*random_number)
+        :timer.sleep(100000000*random_number)
         SleepingBarber.loop(pid_wr, pid_r, pid_b)
 
     end
@@ -29,7 +30,9 @@ defmodule SleepingBarber do
                 send(waiting_room, {:enqueue, pid_c, self()})
 
                 receive do
-                    :added -> send(barber, :customer_waiting)
+                    :added ->
+                        send(barber, :customer_waiting)
+                        send(pid_c, :wait)
                 end
 
                 receptionist(waiting_room)
@@ -49,12 +52,17 @@ defmodule SleepingBarber do
                         random_number = :rand.uniform(9)    # random number between 1 and 9
                         :timer.sleep(1000*random_number)
                         send(customer, :done)
-                        SleepingBarber.barber(waiting_room);
+                        send(waiting_room, {:checkEmpty, self()})
+                        receive do
+                            :empty ->
+                                IO.puts("No customer in the queue. Barber is going to sleep.")
+                                SleepingBarber.barber(waiting_room);
 
-                    :empty ->
-                        IO.puts("No customer in the queue. Barber is going to sleep.")
-                        SleepingBarber.barber(waiting_room);
+                            :notEmpty ->
+                                SleepingBarber.barber(waiting_room);
+                        end
                 end
+
         end
     end
 
@@ -63,9 +71,15 @@ defmodule SleepingBarber do
         send(receptionist, {:receptionist, self()})
 
         receive do
-            :wait -> IO.puts("Customer #{inspect(self())} is waiting.")
-            :full -> IO.puts("Customer #{inspect(self())} left, no space in the queue.")
-            :done -> IO.puts("Customer #{inspect(self())} got a haircut and left.")
+            :wait ->
+                IO.puts("Customer #{inspect(self())} is waiting.")
+                customer(receptionist)
+            :full ->
+                IO.puts("Customer #{inspect(self())} left, no space in the queue.")
+                customer(receptionist)
+            :done ->
+                IO.puts("Customer #{inspect(self())} got a haircut and left.")
+                customer(receptionist)
         end
     end
 
@@ -95,6 +109,7 @@ defmodule SleepingBarber do
                     send(sender, :added)
                     waiting_room(queue ++ [pid_c])
                 end
+
             {:dequeue, sender} ->
                 case queue do
                     [customer | others] ->
@@ -104,6 +119,15 @@ defmodule SleepingBarber do
                     [] ->
                         send(sender, :empty)
                         waiting_room(queue)
+                end
+
+            {:checkEmpty, sender} ->
+                if Enum.count(queue) == 0 do
+                    send(sender, :empty)
+                    waiting_room(queue)
+                else
+                    send(sender, :notEmpty)
+                    waiting_room(queue)
                 end
 
             # {:top, sender} ->
