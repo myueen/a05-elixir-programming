@@ -14,9 +14,9 @@ defmodule SleepingBarber do
         pid_c =  spawn_link(__MODULE__, :customer, [pid_r])
         send(pid_r, {:receptionist, pid_b, pid_c})
 
-        IO.puts("testing for hot-swapping")
+        # IO.puts("testing for hot-swapping")
         random_number = :rand.uniform(9)    # random number between 1 and 9
-        :timer.sleep(100000000*random_number)
+        :timer.sleep(1000*random_number)
         SleepingBarber.loop(pid_wr, pid_r, pid_b)
 
     end
