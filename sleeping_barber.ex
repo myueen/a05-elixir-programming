@@ -16,7 +16,8 @@ defmodule SleepingBarber do
 
         random_number = :rand.uniform(9)    # random number between 1 and 9
         :timer.sleep(1000*random_number)
-        loop(pid_wr, pid_r, pid_b)
+        SleepingBarber.loop(pid_wr, pid_r, pid_b)
+
     end
 
 
@@ -29,7 +30,6 @@ defmodule SleepingBarber do
 
                 receive do
                     :added -> send(barber, :customer_waiting)
-
                 end
 
                 receptionist(waiting_room)
@@ -49,11 +49,11 @@ defmodule SleepingBarber do
                         random_number = :rand.uniform(9)    # random number between 1 and 9
                         :timer.sleep(1000*random_number)
                         send(customer, :done)
-                        barber(waiting_room)
+                        SleepingBarber.barber(waiting_room);
 
                     :empty ->
                         IO.puts("No customer in the queue. Barber is going to sleep.")
-                        barber(waiting_room)
+                        SleepingBarber.barber(waiting_room);
                 end
         end
     end
